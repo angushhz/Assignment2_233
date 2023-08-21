@@ -65,17 +65,6 @@ int readFile(Graph &myGraph, char *filename)
                 }
                 myGraph.graph[i].outdegree++;
                 myGraph.graph[j].indegree++;
-
-                // Check if the edge is undirected, then add the reverse edge for directed graph
-                if (myGraph.nGraphType == UNDIRECTEDGRAPH)
-                {
-                    VertexType *reverseAdjVertex = new VertexType;
-                    reverseAdjVertex->weight = edgeWeight;
-                    reverseAdjVertex->next = myGraph.graph[i].adjVertex;
-                    myGraph.graph[j].outdegree++;
-                    myGraph.graph[i].indegree++;
-                    myGraph.graph[i].adjVertex = reverseAdjVertex;
-                }
             }
         }
     }
@@ -102,7 +91,6 @@ string depthFirstTraversal(Graph &myGraph, VertexType startVertex)
 
     if (startIndex == -1)
     {
-        cout << "Start vertex not found." << endl;
         return result;
     }
 
@@ -159,7 +147,6 @@ string depthFirstTraversal(Graph &myGraph, VertexType startVertex)
                 }
             }
         }
-
         // Push sorted adjacent vertices onto the stack
         for (int i = 0; i < adjCount; i++)
         {
@@ -170,7 +157,6 @@ string depthFirstTraversal(Graph &myGraph, VertexType startVertex)
     return result;
 }
 string breadthFirstTraversal(Graph &myGraph, VertexType startVertex)
-
 {
     string result = "";
     queue<int> q;
@@ -187,7 +173,6 @@ string breadthFirstTraversal(Graph &myGraph, VertexType startVertex)
     }
     if (startIndex == -1)
     {
-        result = "Start vertex not found.";
         return result;
     }
     bool visited[MAX_VERTEX] = {false};
@@ -253,94 +238,134 @@ string breadthFirstTraversal(Graph &myGraph, VertexType startVertex)
 
     return result;
 }
-
-void depthTopoSortHelper(GraphNode &node, stack<VertexType *> &topoStack,string &result)
-{
-    node.vertex.isMarked = true;
-    VertexType *adj = node.adjVertex;
-    while (adj != NULL)
+int FindVertexIndex(const string& vertexName, int nVertices) {
+    for (int i = 0; i < nVertices; ++i) {
+        if (myGraph.graph[i].vertex.strName == vertexName) {
+            return i;
+        }
+    }
+    return -1;
+}
+int findStartTopoHelper(Graph myGraph){
+    int nodeIndices[MAX_VERTEX];
+    int nodeCount = 0;
+    if (myGraph.nOperation == DEPTHTOPOSORT)
     {
-        if (!adj->isMarked)
+        for (int i = 0; i < myGraph.nVertexNum; i++)
         {
-            for (int i = 0; i < myGraph.nVertexNum; ++i)
+            if (myGraph.graph[i].outdegree == 0)
             {
-                if (myGraph.graph[i].vertex.strName == adj->strName)
-                {
-                    depthTopoSortHelper(myGraph.graph[i], topoStack,result);
-                    break;
-                }
+                nodeIndices[nodeCount++] = i;
             }
         }
-        adj = adj->next;
     }
-    result = result + node.vertex.strName;
-    // cout<<node.vertex.strName<<" ";
-    // topoStack.push(&(node.vertex));
-}
-
-string depthTopoSort(Graph &myGraph)
-{
-    string result;
-    stack<VertexType*> topoStack;
-    for (int i = 0; i < myGraph.nVertexNum; ++i) {
-        if (!myGraph.graph[i].vertex.isMarked) {
-            depthTopoSortHelper(myGraph.graph[i], topoStack, result);
+    else if (myGraph.nOperation == BREADTHTOPOSORT)
+    {
+        for (int i = 0; i < myGraph.nVertexNum; i++)
+        {
+            if (myGraph.graph[i].indegree == 0)
+            {
+                nodeIndices[nodeCount++] = i;
+            }
         }
     }
-    return result;
-}
-void breadthTopoSortHelper(GraphNode &node, queue<VertexType *> &topoQueue)
-{
-    queue<VertexType *> traversalQueue;
-    node.vertex.isMarked = true;
-    traversalQueue.push(&(node.vertex));
 
-    while (!traversalQueue.empty())
+    for (int i = 0; i < nodeCount - 1; i++)
     {
-        VertexType *current = traversalQueue.front();
-        traversalQueue.pop();
-        topoQueue.push(current);
-
-        VertexType *adj = node.adjVertex;
-        while (adj != NULL)
+        for (int j = i + 1; j < nodeCount; j++)
         {
-            if (!adj->isMarked)
+            if ((myGraph.nOrder == INCREASINGORDER && strcmp(myGraph.graph[nodeIndices[i]].vertex.strName, myGraph.graph[nodeIndices[j]].vertex.strName) < 0) ||
+                (myGraph.nOrder == DECREASINGORDER && strcmp(myGraph.graph[nodeIndices[i]].vertex.strName, myGraph.graph[nodeIndices[j]].vertex.strName) > 0))
             {
-                for (int i = 0; i < myGraph.nVertexNum; ++i)
+                int temp = nodeIndices[i];
+                nodeIndices[i] = nodeIndices[j];
+                nodeIndices[j] = temp;
+            }
+        }
+    }
+    return nodeIndices[0];
+}
+string depthTopoSort(Graph &myGraph) {
+    // TODO
+    stack<GraphNode *> topoStack;
+    string result = "";
+    // traverse all vertext and find all vertex have outdgree ==0 and push to stack
+    for (int i = 0; i < myGraph.nVertexNum; ++i)
+    {
+        if (myGraph.graph[i].outdegree == 0)
+        {
+            topoStack.push(&(myGraph.graph[i]));
+        }
+    }
+    while (!topoStack.empty())
+    {
+        GraphNode *currentVertex = topoStack.top();
+        topoStack.pop();
+        result += currentVertex->vertex.strName;
+        result += " ";
+        // travese all node in graph to find adjenden of current Vertex
+        for (int i = 0; i < myGraph.nVertexNum; ++i)
+        {
+            VertexType *adj = myGraph.graph[i].adjVertex;
+            while (adj != nullptr)
+            {
+                if (strcmp(adj->strName, currentVertex->vertex.strName) == 0)
                 {
-                    if (myGraph.graph[i].vertex.strName == adj->strName)
+                    myGraph.graph[i].outdegree--;
+                    if (myGraph.graph[i].outdegree == 0)
                     {
-                        myGraph.graph[i].vertex.isMarked = true;
-                        traversalQueue.push(adj);
-                        break;
+                        topoStack.push(&(myGraph.graph[i]));
                     }
+                }
+                adj = adj->next;
+            }
+        }
+    }
+    if (!result.empty())
+    {
+        result.pop_back(); // Remove the last space
+    }
+
+    // return reverse of string
+    string reverseResult = "";
+    for (int i = result.length() - 1; i >= 0; i--)
+    {
+        reverseResult += result[i];
+    }
+    return reverseResult;
+}
+
+string breadthTopoSort(Graph &myGraph)
+{
+    queue<GraphNode *> topoQueue;
+    string result="";
+    for (int i = 0; i < myGraph.nVertexNum; ++i)
+    {
+        if (myGraph.graph[i].indegree == 0)
+        {
+            topoQueue.push(&(myGraph.graph[i]));
+        }
+    }
+    while (!topoQueue.empty()) {
+        GraphNode *currentVertex = topoQueue.front();
+        topoQueue.pop();
+        result += currentVertex->vertex.strName;
+        result += " ";
+        VertexType *adj = currentVertex->adjVertex;
+        while (adj != nullptr) {
+            int adjIndex = FindVertexIndex(adj->strName, myGraph.nVertexNum);
+            if (adjIndex != -1) {
+                myGraph.graph[adjIndex].indegree--;
+                if (myGraph.graph[adjIndex].indegree == 0) {
+                    topoQueue.push(&(myGraph.graph[adjIndex]));
                 }
             }
             adj = adj->next;
         }
     }
-}
 
-string breadthTopoSort(Graph &myGraph)
-{
-    queue<VertexType *> topoQueue;
-    for (int i = 0; i < myGraph.nVertexNum; ++i)
-    {
-        if (!myGraph.graph[i].isMarked)
-        {
-            breadthTopoSortHelper(myGraph.graph[i], topoQueue);
-        }
-    }
-
-    string result;
-    while (!topoQueue.empty())
-    {
-        result += topoQueue.front()->strName;
-        topoQueue.pop();
-        if (!topoQueue.empty())
-        {
-            result += " -> ";
-        }
+    if (!result.empty()) {
+        result.pop_back(); // Remove the last space
     }
 
     return result;
@@ -404,7 +429,7 @@ string minSpanTree(Graph &myGraph, VertexType startVertex)
 
     if (startIdx == -1)
     {
-        return "Start vertex not found!";
+        return "";
     }
 
     // First vertex is always the root of MST
@@ -441,9 +466,7 @@ string minSpanTree(Graph &myGraph, VertexType startVertex)
     {
         if (parent[i] != -1)
         {
-               char buffer[100];
-            sprintf(buffer, "%s -(%f)-> %s", myGraph.graph[parent[i]].vertex.strName, key[i], myGraph.graph[i].vertex.strName);
-            cout<<buffer<<endl;
+            char buffer[100];
             totalSignificantSum += static_cast<int>(key[i]); // Convert float to int
         }
     }
