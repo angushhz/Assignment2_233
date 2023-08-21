@@ -246,56 +246,36 @@ int FindVertexIndex(const string& vertexName, int nVertices) {
     }
     return -1;
 }
-int findStartTopoHelper(Graph myGraph){
+
+string depthTopoSort(Graph &myGraph) {
+    // TODO
+    stack<GraphNode *> topoStack;
+    string result = "";
     int nodeIndices[MAX_VERTEX];
     int nodeCount = 0;
-    if (myGraph.nOperation == DEPTHTOPOSORT)
+        for (int i = 0; i < myGraph.nVertexNum; ++i)
     {
-        for (int i = 0; i < myGraph.nVertexNum; i++)
+        if (myGraph.graph[i].outdegree == 0)
         {
-            if (myGraph.graph[i].outdegree == 0)
-            {
-                nodeIndices[nodeCount++] = i;
-            }
+            nodeIndices[nodeCount++] = i;
         }
     }
-    else if (myGraph.nOperation == BREADTHTOPOSORT)
-    {
-        for (int i = 0; i < myGraph.nVertexNum; i++)
-        {
-            if (myGraph.graph[i].indegree == 0)
-            {
-                nodeIndices[nodeCount++] = i;
-            }
-        }
-    }
-
-    for (int i = 0; i < nodeCount - 1; i++)
-    {
-        for (int j = i + 1; j < nodeCount; j++)
-        {
-            if ((myGraph.nOrder == INCREASINGORDER && strcmp(myGraph.graph[nodeIndices[i]].vertex.strName, myGraph.graph[nodeIndices[j]].vertex.strName) < 0) ||
-                (myGraph.nOrder == DECREASINGORDER && strcmp(myGraph.graph[nodeIndices[i]].vertex.strName, myGraph.graph[nodeIndices[j]].vertex.strName) > 0))
-            {
+        // Sorting nodes based on order type and name
+    for (int i = 0; i < nodeCount - 1; i++) {
+        for (int j = i + 1; j < nodeCount; j++) {
+            if ((myGraph.nOrder == INCREASINGORDER && strcmp(myGraph.graph[nodeIndices[i]].vertex.strName, myGraph.graph[nodeIndices[j]].vertex.strName) > 0) ||
+                (myGraph.nOrder == DECREASINGORDER && strcmp(myGraph.graph[nodeIndices[i]].vertex.strName, myGraph.graph[nodeIndices[j]].vertex.strName) < 0)) {
                 int temp = nodeIndices[i];
                 nodeIndices[i] = nodeIndices[j];
                 nodeIndices[j] = temp;
             }
         }
     }
-    return nodeIndices[0];
-}
-string depthTopoSort(Graph &myGraph) {
-    // TODO
-    stack<GraphNode *> topoStack;
-    string result = "";
-    // traverse all vertext and find all vertex have outdgree ==0 and push to stack
-    for (int i = 0; i < myGraph.nVertexNum; ++i)
-    {
-        if (myGraph.graph[i].outdegree == 0)
-        {
-            topoStack.push(&(myGraph.graph[i]));
-        }
+    
+    // Pushing nodes onto the stack
+    for (int i = 0; i < nodeCount; ++i) {
+        myGraph.graph[nodeIndices[i]].isMarked = true;
+        topoStack.push(&(myGraph.graph[nodeIndices[i]]));
     }
     while (!topoStack.empty())
     {
@@ -303,6 +283,8 @@ string depthTopoSort(Graph &myGraph) {
         topoStack.pop();
         result += currentVertex->vertex.strName;
         result += " ";
+        int nodeIndices[MAX_VERTEX];
+        int nodeCount = 0;
         // travese all node in graph to find adjenden of current Vertex
         for (int i = 0; i < myGraph.nVertexNum; ++i)
         {
@@ -312,13 +294,32 @@ string depthTopoSort(Graph &myGraph) {
                 if (strcmp(adj->strName, currentVertex->vertex.strName) == 0)
                 {
                     myGraph.graph[i].outdegree--;
-                    if (myGraph.graph[i].outdegree == 0)
+                    if (myGraph.graph[i].outdegree == 0 && !myGraph.graph[i].isMarked)
                     {
-                        topoStack.push(&(myGraph.graph[i]));
+                        nodeIndices[nodeCount++] = i;
                     }
                 }
                 adj = adj->next;
             }
+        }
+        // Sorting nodes based on order type and name
+        for (int i = 0; i < nodeCount - 1; i++)
+        {
+            for (int j = i + 1; j < nodeCount; j++)
+            {
+                if ((myGraph.nOrder == INCREASINGORDER && strcmp(myGraph.graph[nodeIndices[i]].vertex.strName, myGraph.graph[nodeIndices[j]].vertex.strName) > 0) ||
+                    (myGraph.nOrder == DECREASINGORDER && strcmp(myGraph.graph[nodeIndices[i]].vertex.strName, myGraph.graph[nodeIndices[j]].vertex.strName) < 0))
+                {
+                    int temp = nodeIndices[i];
+                    nodeIndices[i] = nodeIndices[j];
+                    nodeIndices[j] = temp;
+                }
+            }
+        }
+        for (int i = 0; i < nodeCount; ++i)
+        {
+            myGraph.graph[nodeIndices[i]].isMarked = true;
+            topoStack.push(&(myGraph.graph[nodeIndices[i]]));
         }
     }
     if (!result.empty())
@@ -339,29 +340,69 @@ string breadthTopoSort(Graph &myGraph)
 {
     queue<GraphNode *> topoQueue;
     string result="";
+        int nodeIndices[MAX_VERTEX];
+    int nodeCount = 0;
     for (int i = 0; i < myGraph.nVertexNum; ++i)
     {
         if (myGraph.graph[i].indegree == 0)
         {
-            topoQueue.push(&(myGraph.graph[i]));
+            nodeIndices[nodeCount++] = i;
         }
     }
+    for (int i = 0; i < nodeCount - 1; i++){
+        for (int j = i + 1; j < nodeCount; j++){
+            if ((myGraph.nOrder == INCREASINGORDER && strcmp(myGraph.graph[nodeIndices[i]].vertex.strName, myGraph.graph[nodeIndices[j]].vertex.strName) > 0) ||
+                (myGraph.nOrder == DECREASINGORDER && strcmp(myGraph.graph[nodeIndices[i]].vertex.strName, myGraph.graph[nodeIndices[j]].vertex.strName) < 0))
+            {
+                int temp = nodeIndices[i];
+                nodeIndices[i] = nodeIndices[j];
+                nodeIndices[j] = temp;
+            }
+        }
+    }
+    for (int i = 0; i < nodeCount; ++i)
+    {
+        myGraph.graph[nodeIndices[i]].isMarked = true;
+        topoQueue.push(&(myGraph.graph[nodeIndices[i]]));
+    }
+
     while (!topoQueue.empty()) {
         GraphNode *currentVertex = topoQueue.front();
         topoQueue.pop();
         result += currentVertex->vertex.strName;
         result += " ";
         VertexType *adj = currentVertex->adjVertex;
+        int nodeIndices[MAX_VERTEX];
+        int nodeCount = 0;
         while (adj != nullptr) {
             int adjIndex = FindVertexIndex(adj->strName, myGraph.nVertexNum);
             if (adjIndex != -1) {
                 myGraph.graph[adjIndex].indegree--;
                 if (myGraph.graph[adjIndex].indegree == 0) {
-                    topoQueue.push(&(myGraph.graph[adjIndex]));
+                    nodeIndices[nodeCount++] = adjIndex;
+                    // topoQueue.push(&(myGraph.graph[adjIndex]));
                 }
             }
             adj = adj->next;
         }
+        for (int i = 0; i < nodeCount - 1; i++)
+        {
+            for (int j = i + 1; j < nodeCount; j++)
+            {
+                if ((myGraph.nOrder == INCREASINGORDER && strcmp(myGraph.graph[nodeIndices[i]].vertex.strName, myGraph.graph[nodeIndices[j]].vertex.strName) > 0) ||
+                    (myGraph.nOrder == DECREASINGORDER && strcmp(myGraph.graph[nodeIndices[i]].vertex.strName, myGraph.graph[nodeIndices[j]].vertex.strName) < 0))
+                {
+                    int temp = nodeIndices[i];
+                    nodeIndices[i] = nodeIndices[j];
+                    nodeIndices[j] = temp;
+                }
+            }
+        }
+            for (int i = 0; i < nodeCount; ++i)
+            {
+                myGraph.graph[nodeIndices[i]].isMarked = true;
+                topoQueue.push(&(myGraph.graph[nodeIndices[i]]));
+            }
     }
 
     if (!result.empty()) {
