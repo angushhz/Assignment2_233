@@ -90,7 +90,8 @@ string depthFirstTraversal(Graph &myGraph, VertexType startVertex)
     {
         return result;
     }
-
+    bool isEndTraverse = false;
+     while (!isEndTraverse){
     st.push(startIndex);
     myGraph.graph[startIndex].vertex.isMarked=true;
 
@@ -145,9 +146,40 @@ string depthFirstTraversal(Graph &myGraph, VertexType startVertex)
             st.push(adjIndices[i]);
         }
     }
-    for(int i=0; i < myGraph.nVertexNum;i++){
-        cout<<"MArk"<<myGraph.graph[i].vertex.isMarked;
-    }
+    int nVertextMiss = 0;
+         int arr[MAX_VERTEX];
+         for (int i = 0; i < myGraph.nVertexNum; i++)
+         {
+         if (myGraph.graph[i].vertex.isMarked == false)
+         {
+             arr[nVertextMiss++] = i;
+         }
+         }
+         for (int i = 0; i < nVertextMiss - 1; i++)
+         {
+         for (int j = i + 1; j < nVertextMiss; j++)
+         {
+             if ((myGraph.nOrder == INCREASINGORDER && strcmp(myGraph.graph[arr[i]].vertex.strName, myGraph.graph[arr[j]].vertex.strName) > 0) ||
+                 (myGraph.nOrder == DECREASINGORDER && strcmp(myGraph.graph[arr[i]].vertex.strName, myGraph.graph[arr[j]].vertex.strName) < 0))
+             {
+                 int temp = arr[i];
+                 arr[i] = arr[j];
+                 arr[j] = temp;
+             }
+         }
+         }
+         if (nVertextMiss == 0)
+         {
+         isEndTraverse = true;
+         }
+         else
+         {
+         startIndex = arr[0];
+         }
+     }
+    // for(int i=0; i < myGraph.nVertexNum;i++){
+    //     cout<<"MArk"<<myGraph.graph[i].vertex.isMarked;
+    // }
     if(!result.empty()){
         result.pop_back();
     }
