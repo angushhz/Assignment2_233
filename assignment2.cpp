@@ -49,7 +49,6 @@ int readFile(Graph &myGraph, char *filename)
             fscanf(f, "%d", &edgeWeight);
             if (edgeWeight != 0)
             {
-                VertexType *tempHea = NULL;
                 VertexType *newAdjVertex = new VertexType;
                 strcpy(newAdjVertex->strName, myGraph.graph[j].vertex.strName);
                 newAdjVertex->weight = edgeWeight;
@@ -72,12 +71,10 @@ int readFile(Graph &myGraph, char *filename)
     // Todo
     return 1;
 }
-
 string depthFirstTraversal(Graph &myGraph, VertexType startVertex)
 {
-    string result = "";
+      string result = "";
     stack<int> st;
-    int count = 0;
 
     int startIndex = -1;
     for (int i = 0; i < myGraph.nVertexNum; i++)
@@ -94,20 +91,15 @@ string depthFirstTraversal(Graph &myGraph, VertexType startVertex)
         return result;
     }
 
-    bool visited[MAX_VERTEX] = {false};
-    visited[startIndex] = true;
-
     st.push(startIndex);
+    myGraph.graph[startIndex].vertex.isMarked=true;
 
     while (!st.empty())
     {
         int currentIndex = st.top();
         st.pop();
         result += myGraph.graph[currentIndex].vertex.strName;
-        count++;
-        if (count != myGraph.nVertexNum)
-            result += " ";
-
+        result+=" ";
         // Collect adjacent vertices
         int adjIndices[MAX_VERTEX];
         int adjCount = 0;
@@ -125,10 +117,9 @@ string depthFirstTraversal(Graph &myGraph, VertexType startVertex)
                 }
             }
 
-            if (adjIndex != -1 && !visited[adjIndex])
+            if (adjIndex != -1 && !myGraph.graph[adjIndex].vertex.isMarked)
             {
                 adjIndices[adjCount++] = adjIndex;
-                visited[adjIndex] = true;
             }
             adjVertex = adjVertex->next;
         }
@@ -150,44 +141,49 @@ string depthFirstTraversal(Graph &myGraph, VertexType startVertex)
         // Push sorted adjacent vertices onto the stack
         for (int i = 0; i < adjCount; i++)
         {
+            myGraph.graph[adjIndices[i]].vertex.isMarked=true;
             st.push(adjIndices[i]);
         }
     }
-
+    for(int i=0; i < myGraph.nVertexNum;i++){
+        cout<<"MArk"<<myGraph.graph[i].vertex.isMarked;
+    }
+    if(!result.empty()){
+        result.pop_back();
+    }
     return result;
 }
+
 string breadthFirstTraversal(Graph &myGraph, VertexType startVertex)
 {
     string result = "";
     queue<int> q;
-    int count = 0;
+
     int startIndex = -1;
     for (int i = 0; i < myGraph.nVertexNum; i++)
 
     {
         if (strcmp(myGraph.graph[i].vertex.strName, startVertex.strName) == 0)
         {
-            startIndex = i;
-            break;
+        startIndex = i;
+        break;
         }
     }
     if (startIndex == -1)
     {
         return result;
     }
-    bool visited[MAX_VERTEX] = {false};
-    visited[startIndex] = true;
-
-    q.push(startIndex);
-
-    while (!q.empty())
+    bool isEndTraverse = false;
+    while (!isEndTraverse)
     {
+        q.push(startIndex);
+        myGraph.graph[startIndex].vertex.isMarked = true;
+        while (!q.empty())
+        {
         int currentIndex = q.front();
         q.pop();
         result += myGraph.graph[currentIndex].vertex.strName;
-        count++;
-        if (count != myGraph.nVertexNum)
-            result += " ";
+        result += " ";
 
         // Collect adjacent vertices
         int adjIndices[MAX_VERTEX];
@@ -206,10 +202,9 @@ string breadthFirstTraversal(Graph &myGraph, VertexType startVertex)
                 }
             }
 
-            if (adjIndex != -1 && !visited[adjIndex])
+            if (adjIndex != -1 && !myGraph.graph[adjIndex].vertex.isMarked)
             {
                 adjIndices[adjCount++] = adjIndex;
-                visited[adjIndex] = true;
             }
             adjVertex = adjVertex->next;
         }
@@ -232,24 +227,63 @@ string breadthFirstTraversal(Graph &myGraph, VertexType startVertex)
         // Push sorted adjacent vertices onto the stack
         for (int i = 0; i < adjCount; i++)
         {
+            myGraph.graph[adjIndices[i]].vertex.isMarked = true;
             q.push(adjIndices[i]);
+        }
+        delete adjVertex;
+        }
+        int nVertextMiss = 0;
+        int arr[MAX_VERTEX];
+        for (int i = 0; i < myGraph.nVertexNum; i++)
+        {
+        if (myGraph.graph[i].vertex.isMarked == false)
+        {
+            arr[nVertextMiss++] = i;
+        }
+        }
+        for (int i = 0; i < nVertextMiss - 1; i++)
+        {
+        for (int j = i + 1; j < nVertextMiss; j++)
+        {
+            if ((myGraph.nOrder == INCREASINGORDER && strcmp(myGraph.graph[arr[i]].vertex.strName, myGraph.graph[arr[j]].vertex.strName) > 0) ||
+                (myGraph.nOrder == DECREASINGORDER && strcmp(myGraph.graph[arr[i]].vertex.strName, myGraph.graph[arr[j]].vertex.strName) < 0))
+            {
+                int temp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp;
+            }
+        }
+        }
+        if (nVertextMiss == 0)
+        {
+        isEndTraverse = true;
+        }
+        else
+        {
+        startIndex = arr[0];
         }
     }
 
+    if (!result.empty())
+        result.pop_back();
     return result;
 }
-int FindVertexIndex(const string& vertexName, int nVertices) {
-    for (int i = 0; i < nVertices; ++i) {
-        if (myGraph.graph[i].vertex.strName == vertexName) {
+int FindVertexIndex(const char *vertexName, int nVertices)
+{
+    for (int i = 0; i < nVertices; ++i)
+    {
+        if (strcmp(myGraph.graph[i].vertex.strName, vertexName) == 0)
+        {
             return i;
         }
     }
-    return -1;
+    return -1; // Return -1 if the vertex is not found
 }
 
 string depthTopoSort(Graph &myGraph) {
     // TODO
     stack<GraphNode *> topoStack;
+    stack<string> resultStack;
     string result = "";
     int nodeIndices[MAX_VERTEX];
     int nodeCount = 0;
@@ -281,8 +315,7 @@ string depthTopoSort(Graph &myGraph) {
     {
         GraphNode *currentVertex = topoStack.top();
         topoStack.pop();
-        result += currentVertex->vertex.strName;
-        result += " ";
+        resultStack.push(currentVertex->vertex.strName);
         int nodeIndices[MAX_VERTEX];
         int nodeCount = 0;
         // travese all node in graph to find adjenden of current Vertex
@@ -322,18 +355,18 @@ string depthTopoSort(Graph &myGraph) {
             topoStack.push(&(myGraph.graph[nodeIndices[i]]));
         }
     }
+    // loop all item of result using stack
+    while (!resultStack.empty())
+    {
+        result += resultStack.top();
+        result += " ";
+        resultStack.pop();
+    }
     if (!result.empty())
     {
         result.pop_back(); // Remove the last space
     }
-
-    // return reverse of string
-    string reverseResult = "";
-    for (int i = result.length() - 1; i >= 0; i--)
-    {
-        reverseResult += result[i];
-    }
-    return reverseResult;
+    return result;
 }
 
 string breadthTopoSort(Graph &myGraph)
@@ -404,7 +437,6 @@ string breadthTopoSort(Graph &myGraph)
                 topoQueue.push(&(myGraph.graph[nodeIndices[i]]));
             }
     }
-
     if (!result.empty()) {
         result.pop_back(); // Remove the last space
     }
@@ -427,17 +459,7 @@ int minKey(float key[], bool mstSet[], int nVertices)
 
     return minIndex;
 }
-int FindVertexIndex(const char *vertexName, int nVertices)
-{
-    for (int i = 0; i < nVertices; ++i)
-    {
-        if (strcmp(myGraph.graph[i].vertex.strName, vertexName) == 0)
-        {
-            return i;
-        }
-    }
-    return -1; // Return -1 if the vertex is not found
-}
+
 string minSpanTree(Graph &myGraph, VertexType startVertex)
 {
     // Array to store constructed MST
