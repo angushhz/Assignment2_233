@@ -177,9 +177,6 @@ string depthFirstTraversal(Graph &myGraph, VertexType startVertex)
          startIndex = arr[0];
          }
      }
-    // for(int i=0; i < myGraph.nVertexNum;i++){
-    //     cout<<"MArk"<<myGraph.graph[i].vertex.isMarked;
-    // }
     if(!result.empty()){
         result.pop_back();
     }
