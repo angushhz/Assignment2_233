@@ -5,7 +5,6 @@
 #include "common.h"
 #define _common_h_
 #endif
-#define INF 1000000000
 
 int readFile(Graph &myGraph, char *filename)
 {
@@ -474,7 +473,7 @@ string breadthTopoSort(Graph &myGraph)
 }
 int minKey(float key[], bool mstSet[], int nVertices)
 {
-    float min = INF;
+    float min = INT_MAX;
     int minIndex = -1;
 
     for (int v = 0; v < nVertices; ++v)
@@ -503,7 +502,7 @@ string minSpanTree(Graph &myGraph, VertexType startVertex)
     // Initialize all keys as INFINITE
     for (int i = 0; i < myGraph.nVertexNum; i++)
     {
-        key[i] = INF;
+        key[i] = INT_MAX;
         mstSet[i] = false;
         parent[i] = -1;
     }
