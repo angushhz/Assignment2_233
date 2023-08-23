@@ -177,7 +177,7 @@ string depthFirstTraversal(Graph &myGraph, VertexType startVertex)
          }
      }
     if(!result.empty()){
-        result.pop_back();
+       result=result.substr(0,result.size()-1);
     }
     return result;
 }
@@ -293,7 +293,7 @@ string breadthFirstTraversal(Graph &myGraph, VertexType startVertex)
     }
 
     if (!result.empty())
-        result.pop_back();
+       result =   result.substr(0,result.size()-1);
     return result;
 }
 int FindVertexIndex(const char *vertexName, int nVertices)
@@ -333,7 +333,7 @@ string depthTopoSort(Graph &myGraph) {
             }
         }
     }
-    
+
     // Pushing nodes onto the stack
     for (int i = 0; i < nodeCount; ++i) {
         myGraph.graph[nodeIndices[i]].isMarked = true;
@@ -350,7 +350,7 @@ string depthTopoSort(Graph &myGraph) {
         for (int i = 0; i < myGraph.nVertexNum; ++i)
         {
             VertexType *adj = myGraph.graph[i].adjVertex;
-            while (adj != nullptr)
+            while (adj !=NULL)
             {
                 if (strcmp(adj->strName, currentVertex->vertex.strName) == 0)
                 {
@@ -391,9 +391,7 @@ string depthTopoSort(Graph &myGraph) {
         resultStack.pop();
     }
     if (!result.empty())
-    {
-        result.pop_back(); // Remove the last space
-    }
+         result =   result.substr(0,result.size()-1);
     return result;
 }
 
@@ -435,7 +433,7 @@ string breadthTopoSort(Graph &myGraph)
         VertexType *adj = currentVertex->adjVertex;
         int nodeIndices[MAX_VERTEX];
         int nodeCount = 0;
-        while (adj != nullptr) {
+        while (adj != NULL) {
             int adjIndex = FindVertexIndex(adj->strName, myGraph.nVertexNum);
             if (adjIndex != -1) {
                 myGraph.graph[adjIndex].indegree--;
@@ -466,7 +464,7 @@ string breadthTopoSort(Graph &myGraph)
             }
     }
     if (!result.empty()) {
-        result.pop_back(); // Remove the last space
+        result =   result.substr(0,result.size()-1);
     }
 
     return result;
@@ -557,7 +555,6 @@ string minSpanTree(Graph &myGraph, VertexType startVertex)
     {
         if (parent[i] != -1)
         {
-            char buffer[100];
             totalSignificantSum += static_cast<int>(key[i]); // Convert float to int
         }
     }
